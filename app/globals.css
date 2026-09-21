@@ -142,6 +142,7 @@ footer > small { position: absolute; left: clamp(24px,6vw,92px); bottom: 28px; c
 .dialog-price { margin: 24px 0; color: var(--rose-dark); font-size: 1rem; }
 .variant-field { margin: 0; padding: 0; border: 0; }
 .variant-field legend { margin-bottom: 10px; font-size: .82rem; font-weight: 800; }
+.variant-field legend span { color: var(--muted); font-weight: 600; }
 .variant-field > div { display: flex; flex-wrap: wrap; gap: 8px; }
 .variant-field button { min-height: 40px; padding: 0 13px; display: inline-flex; align-items: center; gap: 5px; border: 1px solid #dfc7cf; border-radius: 999px; background: #fff; color: #644c54; cursor: pointer; font-size: .82rem; }
 .variant-field button.selected { border-color: var(--rose-dark); background: var(--pink-wash); color: var(--rose-dark); }
@@ -150,6 +151,7 @@ footer > small { position: absolute; left: clamp(24px,6vw,92px); bottom: 28px; c
 .quantity-control button { height: 100%; display: grid; place-items: center; border: 0; background: transparent; cursor: pointer; color: var(--ink); }
 .quantity-control span { text-align: center; font-weight: 800; }
 .dialog-add { flex: 1; min-height: 48px; border: 0; border-radius: 999px; display: flex; align-items: center; justify-content: center; gap: 9px; background: var(--rose-dark); color: #fff; font-weight: 800; cursor: pointer; }
+.dialog-add:disabled { background: #c9bfc2; cursor: not-allowed; }
 .availability-note { margin: 14px 0 0; color: #8a727b; font-size: .76rem; line-height: 1.45; }
 
 .cart-sheet { width: min(460px,100%) !important; max-width: 460px !important; background: #fffaf9 !important; border-left-color: #ead8de !important; }
