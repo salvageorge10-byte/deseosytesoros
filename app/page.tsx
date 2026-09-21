@@ -69,23 +69,21 @@ export default function Home() {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem("deseos-y-tesoros-cart");
-      if (saved) setCart(JSON.parse(saved));
-    } catch {
-      window.localStorage.removeItem("deseos-y-tesoros-cart");
-    }
-    setHydrated(true);
+    const frame = window.requestAnimationFrame(() => {
+      try {
+        const saved = window.localStorage.getItem("deseos-y-tesoros-cart");
+        if (saved) setCart(JSON.parse(saved));
+      } catch {
+        window.localStorage.removeItem("deseos-y-tesoros-cart");
+      }
+      setHydrated(true);
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   useEffect(() => {
     if (hydrated) window.localStorage.setItem("deseos-y-tesoros-cart", JSON.stringify(cart));
   }, [cart, hydrated]);
-
-  useEffect(() => {
-    setSelectedVariant(selected?.variants?.options[0] || "");
-    setQuantity(1);
-  }, [selected]);
 
   useEffect(() => {
     type ToolInput = { productId?: string; variant?: string; quantity?: number };
@@ -136,8 +134,14 @@ export default function Home() {
   }, 0);
   const detailedCart = useMemo(() => cart.map((item) => ({ ...item, product: PRODUCTS.find((p) => p.id === item.productId)! })), [cart]);
 
+  function openProduct(product: Product) {
+    setSelectedVariant("");
+    setQuantity(1);
+    setSelected(product);
+  }
+
   function addToCart(product: Product, variant = "", amount = 1) {
-    if (product.variants && !variant) { setSelected(product); return; }
+    if (product.variants && !variant) { openProduct(product); return; }
     const key = `${product.id}::${variant}`;
     setCart((current) => {
       const existing = current.find((item) => item.key === key);
@@ -189,7 +193,7 @@ export default function Home() {
       <section className="catalog-section" id="productos">
         <div className="section-heading"><div><p className="eyebrow"><span /> Catálogo</p><h2>Encontrá tu próximo tesoro</h2></div><p>Elegí tus favoritos y armá el pedido. La disponibilidad, el pago y la entrega se confirman por WhatsApp.</p></div>
         <div className="category-list" aria-label="Filtrar por categoría">{categories.map((item) => <button key={item} className={category === item ? "active" : ""} onClick={() => setCategory(item)} aria-pressed={category === item}>{item}</button>)}</div>
-        <div className="product-grid">{filtered.map((product) => <article className="product-card" key={product.id}><button className="product-photo" onClick={() => setSelected(product)} aria-label={`Ver ${product.name}`}><ProductImage product={product} /><span>Ver detalle</span></button><div className="product-info"><p>{product.category}</p><h3>{product.name}</h3><strong>{priceText(product)}</strong><button onClick={() => product.variants ? setSelected(product) : addToCart(product)}><ShoppingBag size={17} /> Agregar al carrito</button></div></article>)}</div>
+        <div className="product-grid">{filtered.map((product) => <article className="product-card" key={product.id}><button className="product-photo" onClick={() => openProduct(product)} aria-label={`Ver ${product.name}`}><ProductImage product={product} /><span>Ver detalle</span></button><div className="product-info"><p>{product.category}</p><h3>{product.name}</h3><strong>{priceText(product)}</strong><button onClick={() => product.variants ? openProduct(product) : addToCart(product)}><ShoppingBag size={17} /> Agregar al carrito</button></div></article>)}</div>
       </section>
 
       <section className="brand-story" id="marca"><div className="story-mark"><span>✦</span><strong>D&amp;T</strong><small>Desde Santo Domingo</small></div><div><p className="eyebrow light"><span /> Nuestra esencia</p><h2>Accesorios para guardar, usar y regalar.</h2></div><p>Deseos y Tesoros es una tienda virtual de belleza y accesorios personales. Cada pieza se presenta con cuidado para que encontrar un detalle especial sea simple.</p></section>
@@ -197,7 +201,7 @@ export default function Home() {
       <footer id="contacto"><div className="footer-brand"><strong>Deseos y Tesoros</strong><span>Jewelry & Beauty</span></div><div><p>¿Querés consultar por un producto?</p><a href={STORE_CONFIG.instagramUrl} target="_blank" rel="noreferrer"><InstagramGlyph /> @deseos.y.tesoros</a></div><div><p>Ubicación</p><span>Santo Domingo, República Dominicana</span></div><small>Los pedidos se confirman personalmente por WhatsApp.</small></footer>
 
       <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
-        {selected && <DialogContent className="product-dialog" aria-describedby="product-description"><div className="dialog-photo"><ProductImage product={selected} hero /></div><div className="dialog-copy"><DialogHeader><p className="dialog-category">{selected.category}</p><DialogTitle>{selected.name}</DialogTitle><DialogDescription id="product-description">{selected.description}</DialogDescription></DialogHeader><strong className="dialog-price">{priceText(selected)}</strong>{selected.variants && <fieldset className="variant-field"><legend>{selected.variants.label}</legend><div>{selected.variants.options.map((option) => <button key={option} className={selectedVariant === option ? "selected" : ""} onClick={() => setSelectedVariant(option)}>{selectedVariant === option && <Check size={14} />} {option}</button>)}</div></fieldset>}<div className="dialog-bottom"><div className="quantity-control"><button onClick={() => setQuantity(Math.max(1, quantity - 1))} aria-label="Quitar uno"><Minus size={17} /></button><span>{quantity}</span><button onClick={() => setQuantity(quantity + 1)} aria-label="Agregar uno"><Plus size={17} /></button></div><button className="dialog-add" onClick={() => { addToCart(selected, selectedVariant, quantity); setSelected(null); }}>Agregar <ShoppingBag size={17} /></button></div><p className="availability-note">Disponibilidad, pago y entrega se coordinan por WhatsApp.</p></div></DialogContent>}
+        {selected && <DialogContent className="product-dialog" aria-describedby="product-description"><div className="dialog-photo"><ProductImage product={selected} hero /></div><div className="dialog-copy"><DialogHeader><p className="dialog-category">{selected.category}</p><DialogTitle>{selected.name}</DialogTitle><DialogDescription id="product-description">{selected.description}</DialogDescription></DialogHeader><strong className="dialog-price">{priceText(selected)}</strong>{selected.variants && <fieldset className="variant-field"><legend>{selected.variants.label} <span>(elegí una opción)</span></legend><div>{selected.variants.options.map((option) => <button key={option} className={selectedVariant === option ? "selected" : ""} onClick={() => setSelectedVariant(option)}>{selectedVariant === option && <Check size={14} />} {option}</button>)}</div></fieldset>}<div className="dialog-bottom"><div className="quantity-control"><button onClick={() => setQuantity(Math.max(1, quantity - 1))} aria-label="Quitar uno"><Minus size={17} /></button><span>{quantity}</span><button onClick={() => setQuantity(quantity + 1)} aria-label="Agregar uno"><Plus size={17} /></button></div><button className="dialog-add" disabled={!!selected.variants && !selectedVariant} onClick={() => { addToCart(selected, selectedVariant, quantity); setSelected(null); }}>Agregar <ShoppingBag size={17} /></button></div><p className="availability-note">Disponibilidad, pago y entrega se coordinan por WhatsApp.</p></div></DialogContent>}
       </Dialog>
       <button className="mobile-cart" onClick={() => setCartOpen(true)} aria-label={`Abrir carrito, ${itemCount} productos`}><ShoppingBag size={19} /><span>Ver carrito</span><b>{itemCount}</b></button>
     </main>
